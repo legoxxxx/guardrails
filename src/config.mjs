@@ -17,10 +17,15 @@
 //
 // POR QUÉ LOS DEFECTOS SON LOS VALORES QUE YA HABÍA
 //
-//   Un proyecto que no traiga `guardrails.config.json` se comporta exactamente
-//   igual que antes de la extracción. Eso es lo que permite demostrar que
-//   trasladar los scripts no cambió nada: misma salida, sin configurar nada.
-//   La configuración es para lo que diverge, no un requisito de entrada.
+//   Un proyecto que no traiga `guardrails.config.json` se comporta como manda
+//   la convención del workspace. Al nacer el paquete los defectos eran, literal,
+//   los valores que los scripts traían cableados — así se demostró que trasladar
+//   no cambió nada. Desde entonces los defectos siguen al ESTÁNDAR, no al
+//   proyecto que los donó: cuando `specs/` en la raíz pasó a ser la ubicación
+//   común de los tres proyectos (2026-08-22), entró en los defectos.
+//
+//   La configuración es para lo que diverge de verdad, no un requisito de
+//   entrada: un proyecto que sigue la convención no debería declarar nada.
 // ────────────────────────────────────────────────────────────────────────────
 
 import { readFileSync, existsSync } from "node:fs";
@@ -30,7 +35,7 @@ const ARCHIVO = "guardrails.config.json";
 const DEFECTOS = {
   nul: {
     // Dónde buscar bytes que rompen un archivo de texto.
-    scan: ["docs", "scripts", ".github"],
+    scan: ["docs", "specs", "scripts", ".github"],
   },
   stack: {
     // Documentos donde vive la tabla de stack que se contrasta con package.json.
@@ -44,10 +49,10 @@ const DEFECTOS = {
   },
   refs: {
     // Dónde viven los documentos cuyas rutas citadas se comprueban.
-    docs: ["docs"],
+    docs: ["docs", "specs"],
     // Prefijos que son rutas reales del repositorio. Cualquier otra cosa entre
     // comillas invertidas (nombres de función, comandos, clases CSS) se ignora.
-    roots: ["docs/", "src/", "prisma/", "scripts/", "e2e/", "public/", ".github/"],
+    roots: ["docs/", "specs/", "src/", "prisma/", "scripts/", "e2e/", "public/", ".github/"],
     // Documentos que REGISTRAN el pasado y por tanto tienen que poder nombrar
     // rutas que ya no existen. Incluirlos daba 292 falsos positivos en un
     // proyecto y 218 en otro, y un check con ese ruido se ignora entero.

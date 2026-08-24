@@ -140,12 +140,17 @@ opcional en la raíz del repositorio:
 {
   "nul": { "scan": ["docs", "specs", "scripts", "tests", ".github"] },
   "refs": {
-    "docs": ["docs", "specs"],
     "roots": ["docs/", "specs/", "src/", "scripts/", "tests/", "data/", "public/", ".github/"],
     "historical": []
-  }
+  },
+  "stack": { "ambito": ["README.md", "AGENTS.md", "docs/blueprint.md"], "schema": null }
 }
 ```
+
+Los defectos siguen a la **convención del workspace**: `docs/` y `specs/` en la raíz, workflows
+en `.github/workflows`, tabla de stack en `README.md` y `AGENTS.md`. Un proyecto que siga esa
+convención no necesita declarar nada; el ejemplo de arriba es un proyecto que se sale de ella en
+tres cosas y sólo declara esas tres.
 
 | Clave | Qué es |
 | --- | --- |
