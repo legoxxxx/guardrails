@@ -49,6 +49,11 @@ const COMANDOS = {
     resumen: "El stack documentado existe de verdad, y la configuración ejecutable lo respeta",
     opciones: ["configurable en guardrails.config.json → stack.ambito, stack.workflows, stack.schema"],
   },
+  state: {
+    modulo: "../src/state.mjs",
+    resumen: "Los documentos de estado cumplen lo que su propia prosa declara",
+    opciones: ["configurable en guardrails.config.json → state.docs, state.index, state.estado"],
+  },
   surface: {
     modulo: "../src/surface.mjs",
     resumen: "El diff cuadra con la superficie que el commit declaró en su trailer",

@@ -9,6 +9,7 @@ npx guardrails worktree      # ¿está el árbol donde debe?
 npx guardrails nul           # ¿sigue siendo texto lo que dice ser texto?
 npx guardrails refs          # ¿existen las rutas que la documentación cita?
 npx guardrails stack         # ¿el stack documentado existe de verdad?
+npx guardrails state         # ¿los documentos de estado cumplen lo que dicen?
 npx guardrails surface       # ¿el diff cuadra con lo que el commit declaró?
 ```
 
@@ -111,6 +112,28 @@ frente a la auditoría que sí eliminó otras.
 > Es distinto de que la ruta no exista, que sigue avisando: lo segundo puede ser un esquema
 > movido de sitio.
 
+### `state`
+
+Comprueba que los documentos de estado cumplen lo que su **propia prosa** declara. Cuatro
+invariantes, y la cuarta es la que suele faltar: **ningún documento puede prohibir un archivo
+que sí existe.**
+
+```bash
+npx guardrails state
+```
+
+Nació de una contradicción que tres guardrails dieron por buena: un documento declaraba que
+cierto archivo «no existe», mientras otros cinco lo trataban como legítimo — y el archivo
+existía, con historial que nada más cubría. Un agente que leyera el primero lo habría borrado.
+Verificar que lo citado existe y verificar que lo prohibido no existe son invariantes opuestas:
+la primera no puede detectar la segunda.
+
+Las prohibiciones **se descubren por redacción**, no por lista: cualquier documento que declare
+que un archivo no debe existir queda sujeto a que realmente no exista.
+
+> Un proyecto sin documentos de estado declara `"estado": {}`. Los invariantes que dependen de
+> ellos se saltan y queda en pie el genérico, que no necesita ninguno.
+
 ### `surface`
 
 Comprueba que el número de archivos que el commit declaró en su trailer `Superficie:` cuadra
@@ -161,6 +184,8 @@ tres cosas y sólo declara esas tres.
 | `stack.ambito` | Documentos donde vive la tabla de stack que se contrasta con `package.json` |
 | `stack.workflows` | Carpeta de workflows cuya configuración ejecutable se compara con el dato canónico |
 | `stack.schema` | Esquema del que se lee el motor de base de datos. `null` si el proyecto no tiene |
+| `state.docs` · `state.index` | Carpeta de documentos y dónde el proyecto declara su modelo de estado |
+| `state.estado` | Los documentos de estado y su papel: `siempre` (obligatorio), `abierto` (es el backlog). `{}` si no hay |
 
 **Sin archivo, se usan los defectos**, que son los valores con los que estos guardrails nacieron.
 Un proyecto que no configure nada se comporta igual que antes de que existiera este paquete —

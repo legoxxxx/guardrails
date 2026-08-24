@@ -47,6 +47,33 @@ const DEFECTOS = {
     // solo: un proyecto sin base de datos no tiene motor que contrastar.
     schema: "prisma/schema.prisma",
   },
+  state: {
+    docs: "docs",
+    // Dónde el proyecto DECLARA qué documentos componen su modelo de estado.
+    index: "docs/INDEX.md",
+    // Los documentos de estado y su papel.
+    //
+    // `siempre: true`  → tiene que existir, sin excusa.
+    // `siempre: false` → sólo se exige si el índice lo cita. Es lo que evita el
+    //                    rojo permanente en un proyecto que no lo usa: un check
+    //                    que siempre falla se ignora, y así fue como uno de estos
+    //                    documentos llegó a borrarse dos veces.
+    // `abierto: true`  → es el backlog. Sobre él se comprueba que no haya casillas
+    //                    marcadas (una tarea hecha disfrazada de pendiente) y que
+    //                    nombre adónde va lo que se cierra.
+    //
+    // Un proyecto sin documentos de estado declara `{}`: los invariantes que
+    // dependen de ellos se saltan y queda en pie el genérico —nadie prohíbe un
+    // archivo que existe—, que no necesita ninguno.
+    estado: {
+      "TODO.md": { trabajo: "sólo trabajo ABIERTO", siempre: true, abierto: true },
+      "CHANGELOG.md": { trabajo: "historial por VERSIÓN (cara al release)", siempre: true },
+      "DONE.md": {
+        trabajo: "historial por FECHA (trazabilidad, incluye lo previo al CHANGELOG)",
+        siempre: false,
+      },
+    },
+  },
   refs: {
     // Dónde viven los documentos cuyas rutas citadas se comprueban.
     docs: ["docs", "specs"],
