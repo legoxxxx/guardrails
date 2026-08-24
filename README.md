@@ -8,6 +8,7 @@ opcional, con defectos que funcionan.
 npx guardrails worktree      # ¿está el árbol donde debe?
 npx guardrails nul           # ¿sigue siendo texto lo que dice ser texto?
 npx guardrails refs          # ¿existen las rutas que la documentación cita?
+npx guardrails stack         # ¿el stack documentado existe de verdad?
 npx guardrails surface       # ¿el diff cuadra con lo que el commit declaró?
 ```
 
@@ -91,6 +92,25 @@ nunca llegó a crearse, la plantilla de un ADR—. Medido: la primera corrida so
 nuevo dio 7 hallazgos y **los 7 eran de esa clase**. Excluir el archivo entero por eso habría
 apagado la comprobación en un documento de 762 líneas lleno de rutas reales.
 
+### `stack`
+
+Contrasta el stack que la documentación **afirma** contra `package.json` y su historia en `git`,
+y la configuración ejecutable contra su dato canónico (imagen de base de datos vs `provider`,
+`node-version` de CI vs `engines.node` vs `.nvmrc`).
+
+```bash
+npx guardrails stack
+```
+
+Existe porque una tabla de stack miente sin que nadie lo note. Un proyecto afirmó durante meses
+usar una librería de caché para «polling del dashboard» cuando no había una sola llamada en
+`src/` y su provider ni siquiera estaba montado — y la afirmación **blindó la dependencia**
+frente a la auditoría que sí eliminó otras.
+
+> Un proyecto sin base de datos declara `"schema": null` y ese check se salta con «no aplica».
+> Es distinto de que la ruta no exista, que sigue avisando: lo segundo puede ser un esquema
+> movido de sitio.
+
 ### `surface`
 
 Comprueba que el número de archivos que el commit declaró en su trailer `Superficie:` cuadra
@@ -133,6 +153,9 @@ opcional en la raíz del repositorio:
 | `refs.docs` | Carpetas cuyos documentos se leen en busca de rutas citadas |
 | `refs.roots` | Prefijos que cuentan como ruta del repositorio. Lo demás entre comillas invertidas —nombres de función, comandos, clases CSS— se ignora |
 | `refs.historical` | Expresiones regulares de documentos que registran el pasado y por tanto pueden nombrar rutas que ya no existen |
+| `stack.ambito` | Documentos donde vive la tabla de stack que se contrasta con `package.json` |
+| `stack.workflows` | Carpeta de workflows cuya configuración ejecutable se compara con el dato canónico |
+| `stack.schema` | Esquema del que se lee el motor de base de datos. `null` si el proyecto no tiene |
 
 **Sin archivo, se usan los defectos**, que son los valores con los que estos guardrails nacieron.
 Un proyecto que no configure nada se comporta igual que antes de que existiera este paquete —

@@ -32,6 +32,16 @@ const DEFECTOS = {
     // Dónde buscar bytes que rompen un archivo de texto.
     scan: ["docs", "scripts", ".github"],
   },
+  stack: {
+    // Documentos donde vive la tabla de stack que se contrasta con package.json.
+    ambito: ["README.md", "AGENTS.md", "docs/architecture"],
+    // Dónde están los workflows cuya configuración ejecutable se compara con el
+    // dato canónico (imagen de BD vs provider, node-version vs engines.node).
+    workflows: ".github/workflows",
+    // Esquema del que se lee el `provider`. Si no existe, ese check se salta
+    // solo: un proyecto sin base de datos no tiene motor que contrastar.
+    schema: "prisma/schema.prisma",
+  },
   refs: {
     // Dónde viven los documentos cuyas rutas citadas se comprueban.
     docs: ["docs"],

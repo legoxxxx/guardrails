@@ -44,6 +44,11 @@ const COMANDOS = {
     resumen: "Las rutas que la documentación cita existen de verdad",
     opciones: ["configurable en guardrails.config.json → refs.docs, refs.roots, refs.historical"],
   },
+  stack: {
+    modulo: "../src/stack.mjs",
+    resumen: "El stack documentado existe de verdad, y la configuración ejecutable lo respeta",
+    opciones: ["configurable en guardrails.config.json → stack.ambito, stack.workflows, stack.schema"],
+  },
   surface: {
     modulo: "../src/surface.mjs",
     resumen: "El diff cuadra con la superficie que el commit declaró en su trailer",
