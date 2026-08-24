@@ -63,7 +63,7 @@ const ROOTS = CFG.roots;
 // Una referencia con marcador de plantilla no es una ruta: es un patrón.
 // `docs/audits/YYYY-MM-DD-<slug>.md` no debe existir — describe un nombre futuro.
 const ES_PLANTILLA = (p) =>
-  /[<>[\]*]|YYYY|MM-DD|\{|\}|\.\.\.|…|\bN\b|\bnnn\b|\bNNN\b/.test(p) ||
+  /[<>[\]*]|YYYY|MM-DD|\{|\}|\.\.\.|…|\bN\b|\bn{2,}\b|\bN{2,}\b/.test(p) ||
   /\[entity\]|\[module\]|\[Entity\]/.test(p);
 
 // DOCUMENTOS HISTÓRICOS — se excluyen a propósito.
@@ -92,7 +92,47 @@ const ES_HISTORICO = (rel) => HISTORICOS.some((r) => r.test(rel));
 //
 // Es el mismo diseño que `**Tipo**` en los prompts: el archivo declara, el
 // script verifica. Añadir el marcador es una decisión trazable en un diff.
-const DECLARA_EJEMPLOS = (body) => /<!--\s*check-refs:\s*ejemplos[\s\S]*?-->/.test(body);
+// El lookahead excluye `ejemplos-desde` y `ejemplos-hasta`: son el opt-out por
+// REGIÓN de más abajo, y sin él este de archivo entero los tragaría —
+// desactivando el documento completo justo cuando se pedía acotar un tramo.
+const DECLARA_EJEMPLOS = (body) =>
+  /<!--\s*check-refs:\s*ejemplos(?!-desde|-hasta)[\s\S]*?-->/.test(body);
+
+// OPT-OUT POR REGIÓN — un TRAMO del documento habla de lo que no existe.
+//
+// El opt-out de archivo entero no sirve cuando el documento es mayormente real y
+// sólo un párrafo es ilustrativo. Pasa en todo documento de arquitectura, que
+// necesita nombrar rutas PARA DECIR QUE NO EXISTEN: el anti-ejemplo de YAGNI
+// («no crees `src/domain/order.ts` para cuando vendamos»), la nota que registra
+// que una carpeta planificada nunca llegó a existir, la plantilla de un ADR.
+//
+// Sin esto, un proyecto con esa clase de prosa recibe falsos positivos en su
+// primera corrida y desactiva el check — que es lo mismo que el bloque de
+// DOCUMENTOS HISTÓRICOS existe para evitar, sólo que a otra escala. Medido: los
+// 7 hallazgos de la primera corrida sobre un proyecto nuevo eran 7 de éstos.
+//
+//     <!-- check-refs: ejemplos-desde -->
+//     ...prosa que nombra rutas inexistentes a propósito...
+//     <!-- check-refs: ejemplos-hasta -->
+//
+// Una apertura sin cierre llega hasta el final del archivo. Es deliberado: el
+// modo de fallo de olvidar el cierre es comprobar de menos, y eso se ve en el
+// contador de la salida. Al revés se reportarían rutas ya excusadas.
+function regionesEjemplo(body) {
+  const rangos = [];
+  const marca = /<!--\s*check-refs:\s*ejemplos-(desde|hasta)\s*-->/g;
+  let abierto = null;
+  for (const m of body.matchAll(marca)) {
+    if (m[1] === "desde") {
+      if (abierto === null) abierto = m.index;
+    } else if (abierto !== null) {
+      rangos.push([abierto, m.index + m[0].length]);
+      abierto = null;
+    }
+  }
+  if (abierto !== null) rangos.push([abierto, body.length]);
+  return rangos;
+}
 
 // SECCIONES CRÍTICAS — dónde una ruta rota deja de ser cosmética.
 //
@@ -172,6 +212,7 @@ for (const file of files) {
     continue;
   }
   const vistas = new Set();
+  const ejemploEn = regionesEjemplo(body);
   const criticos = rangosCriticos(body);
   const esCritica = (idx) => {
     const linea = body.slice(0, idx).split("\n").length - 1;
@@ -181,6 +222,10 @@ for (const file of files) {
   for (const m of body.matchAll(/`([^`\n]+)`/g)) {
     const raw = m[1].trim();
     if (!ROOTS.some((r) => raw.startsWith(r))) continue;
+    if (ejemploEn.some(([a, b]) => m.index >= a && m.index < b)) {
+      plantillas++;
+      continue;
+    }
 
     // `[`src/providers/node/mod.rs`](https://github.com/…)` es una ruta DENTRO
     // de otro repositorio, enlazada a su GitHub. Empieza como una ruta local y

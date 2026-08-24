@@ -82,7 +82,14 @@ Dos escapes, los dos declarados **en el propio archivo** y no en una lista dentr
 | Escape | Cómo se declara |
 | --- | --- |
 | El documento registra el pasado y por eso nombra rutas que ya no existen | `refs.historical` en la configuración |
-| Las rutas del documento son ilustrativas (un tutorial, una plantilla) | `<!-- check-refs: ejemplos -->` en su cabecera |
+| Todo el documento es ilustrativo (un tutorial, una plantilla) | `<!-- check-refs: ejemplos -->` en su cabecera |
+| **Un tramo** del documento nombra rutas para decir que no existen | `<!-- check-refs: ejemplos-desde -->` … `<!-- check-refs: ejemplos-hasta -->` |
+
+El de tramo hace falta más de lo que parece: todo documento de arquitectura nombra rutas
+**para decir que no existen** —el anti-ejemplo de YAGNI, la nota de que una carpeta planificada
+nunca llegó a crearse, la plantilla de un ADR—. Medido: la primera corrida sobre un proyecto
+nuevo dio 7 hallazgos y **los 7 eran de esa clase**. Excluir el archivo entero por eso habría
+apagado la comprobación en un documento de 762 líneas lleno de rutas reales.
 
 ### `surface`
 
