@@ -1,10 +1,13 @@
 # guardrails
 
-Comprobaciones de repositorio que **no saben en qué proyecto corren**. Sin dependencias, sin
-configuración y sin ningún nombre de proyecto dentro.
+Comprobaciones de repositorio que **no saben en qué proyecto corren**. Sin dependencias y sin
+ningún nombre de proyecto dentro. Dos no necesitan configuración; las otras dos la traen
+opcional, con defectos que funcionan.
 
 ```bash
 npx guardrails worktree      # ¿está el árbol donde debe?
+npx guardrails nul           # ¿sigue siendo texto lo que dice ser texto?
+npx guardrails refs          # ¿existen las rutas que la documentación cita?
 npx guardrails surface       # ¿el diff cuadra con lo que el commit declaró?
 ```
 
@@ -12,7 +15,7 @@ npx guardrails surface       # ¿el diff cuadra con lo que el commit declaró?
 
 ## Por qué existe
 
-Estas dos comprobaciones vivían duplicadas en `scripts/` de cada proyecto, mantenidas
+Estas comprobaciones vivían duplicadas en `scripts/` de cada proyecto, mantenidas
 idénticas byte a byte por un contrato de sincronización. El contrato funcionaba, pero tenía
 dos límites que sólo se ven al añadir un tercer proyecto:
 
@@ -47,6 +50,40 @@ npx guardrails worktree --max-dirty=40     # sube el umbral (por defecto 30)
 
 **Es directo en cualquier repositorio git.** No asume nada del proyecto.
 
+### `nul`
+
+Recorre las carpetas configuradas y falla si un archivo de texto contiene un byte NUL.
+
+Un solo NUL convierte el archivo en binario para `git` y para `grep`: `git show` dice
+`Bin 0 -> N bytes` y no se puede revisar en ningún diff, y cualquier `grep -rn` lo salta sin
+avisar. Las dos consecuencias son silenciosas, que es lo que lo hace peligroso en un directorio
+de guardrails.
+
+```bash
+npx guardrails nul
+```
+
+> No es el `grep -rlP '\x00'` de una línea. Medido: `grep` sin `-a` trata el binario como
+> binario y suprime la salida, así que daba **verde sobre un archivo con NUL dentro**. Y el
+> comportamiento depende de la implementación, o sea de la máquina.
+
+### `refs`
+
+Descubre por expresión regular las rutas que la documentación cita y comprueba que existen.
+Una ruta rota dentro de una instrucción no es un enlace muerto: es una orden que nadie puede
+cumplir.
+
+```bash
+npx guardrails refs
+```
+
+Dos escapes, los dos declarados **en el propio archivo** y no en una lista dentro del script:
+
+| Escape | Cómo se declara |
+| --- | --- |
+| El documento registra el pasado y por eso nombra rutas que ya no existen | `refs.historical` en la configuración |
+| Las rutas del documento son ilustrativas (un tutorial, una plantilla) | `<!-- check-refs: ejemplos -->` en su cabecera |
+
 ### `surface`
 
 Comprueba que el número de archivos que el commit declaró en su trailer `Superficie:` cuadra
@@ -64,21 +101,65 @@ npx guardrails surface --range <sha>..<sha>
 
 ---
 
-## Instalación
+## Configuración
 
-No hay. `npx` descarga el paquete y lo ejecuta; no tiene dependencias, así que no arrastra
-árbol.
+`worktree` y `surface` no la necesitan: operan sobre `git`, que es igual en todas partes.
 
-Eso es deliberado y tiene un motivo medido: el workflow que corre estas comprobaciones en uno
-de los proyectos consumidores no ejecuta `npm ci` —instalar 1,2 GB de dependencias para leer
-git haría el job veinte veces más lento—. Un paquete como `dependency` obligaría a instalarlas;
-invocado con `npx`, no.
+`nul` y `refs` miran **carpetas**, y ahí los proyectos difieren de verdad — uno tiene las specs
+en `docs/specs/` y otro en `specs/` a la raíz. Se declaran en un `guardrails.config.json`
+opcional en la raíz del repositorio:
 
-Fijar la versión es lo que convierte esto en un mecanismo y no en una copia:
-
-```yaml
-- run: npx --yes guardrails@1.0.0 worktree
+```json
+{
+  "nul": { "scan": ["docs", "specs", "scripts", "tests", ".github"] },
+  "refs": {
+    "docs": ["docs", "specs"],
+    "roots": ["docs/", "specs/", "src/", "scripts/", "tests/", "data/", "public/", ".github/"],
+    "historical": []
+  }
+}
 ```
+
+| Clave | Qué es |
+| --- | --- |
+| `nul.scan` | Carpetas donde buscar bytes NUL |
+| `refs.docs` | Carpetas cuyos documentos se leen en busca de rutas citadas |
+| `refs.roots` | Prefijos que cuentan como ruta del repositorio. Lo demás entre comillas invertidas —nombres de función, comandos, clases CSS— se ignora |
+| `refs.historical` | Expresiones regulares de documentos que registran el pasado y por tanto pueden nombrar rutas que ya no existen |
+
+**Sin archivo, se usan los defectos**, que son los valores con los que estos guardrails nacieron.
+Un proyecto que no configure nada se comporta igual que antes de que existiera este paquete —
+que es lo que permitió demostrar que la extracción no cambió nada.
+
+**Una lista declarada reemplaza a la del defecto, no se suma.** Si se sumara, no habría forma de
+quitar `prisma/` en un proyecto sin base de datos, y la configuración acabaría siendo la unión
+de todos los proyectos que la han tocado. Una clave mal escrita **falla**, no se ignora: un
+guardrail que corre con los defectos aparentando estar configurado es verde sin comprobar lo
+que se creía.
+
+---
+
+## Cómo se consume
+
+Depende de si hay `node_modules` delante, y la diferencia está **medida**:
+
+| Dónde | Cómo | Tiempo |
+| --- | --- | --- |
+| Hook de git | `./node_modules/.bin/guardrails <cmd>` | 0,051 s |
+| Script de `package.json` | `guardrails <cmd>` — npm pone `.bin` en el `PATH` | 0,051 s |
+| CI **sin** `npm ci` | `npx --yes github:<owner>/guardrails#v1.1.0 <cmd>` | ~2 s |
+
+**En hooks no se usa `npx`.** Resolver el paquete por red tarda 2 segundos incluso con la caché
+caliente, contra 0,05 de la ruta directa. Dos segundos en cada `git commit` es la clase de
+fricción que acaba con el hook desactivado — y además falla sin red.
+
+**En CI sí**, porque hay workflows que deliberadamente no ejecutan `npm ci`: instalar 1,2 GB de
+dependencias para leer git haría el job veinte veces más lento. Ahí `npx` compensa, y como este
+paquete no tiene dependencias no arrastra árbol.
+
+En los dos casos la versión va **fijada**: el `package-lock.json` para lo local, el tag para CI.
+Eso es lo que convierte esto en un mecanismo y no en una copia — un `#main` volvería a dejar sin
+respuesta la pregunta de qué se está ejecutando exactamente.
 
 ---
 

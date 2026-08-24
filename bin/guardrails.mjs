@@ -34,6 +34,16 @@ const COMANDOS = {
     resumen: "Estado del árbol frente a origin: posición, limpieza, frescura del fetch",
     opciones: ["--fetch            refresca antes de medir", "--max-dirty=<n>    umbral de archivos sin commitear (por defecto 30)"],
   },
+  nul: {
+    modulo: "../src/nul.mjs",
+    resumen: "Que un archivo de texto siga siendo texto: caza bytes NUL",
+    opciones: ["configurable en guardrails.config.json → nul.scan"],
+  },
+  refs: {
+    modulo: "../src/refs.mjs",
+    resumen: "Las rutas que la documentación cita existen de verdad",
+    opciones: ["configurable en guardrails.config.json → refs.docs, refs.roots, refs.historical"],
+  },
   surface: {
     modulo: "../src/surface.mjs",
     resumen: "El diff cuadra con la superficie que el commit declaró en su trailer",

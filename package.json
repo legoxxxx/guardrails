@@ -1,7 +1,7 @@
 {
   "name": "guardrails",
-  "version": "1.0.0",
-  "description": "Comprobaciones portables de repositorio: posición del árbol y superficie declarada del commit. Sin dependencias y sin nada específico de un proyecto.",
+  "version": "1.1.0",
+  "description": "Comprobaciones portables de repositorio: posición del árbol, bytes NUL, rutas citadas en la documentación y superficie declarada del commit. Sin dependencias y sin nada específico de un proyecto.",
   "type": "module",
   "bin": {
     "guardrails": "bin/guardrails.mjs"
