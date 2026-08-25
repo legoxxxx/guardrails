@@ -74,6 +74,26 @@ const DEFECTOS = {
       },
     },
   },
+  wiring: {
+    // Dónde viven los guardrails propios del proyecto, y cómo se llaman.
+    dirs: ["scripts"],
+    pattern: "^check-[a-z-]+\\.mjs$",
+    // Dónde puede estar cableado uno. Se incluyen las dos familias de hooks
+    // —husky pone archivos en `.husky/`, lefthook los declara en un YAML— porque
+    // un proyecto usa una y otro la otra; la que no exista se salta.
+    surfaces: [".husky", ".github/workflows", "lefthook.yml"],
+    // Scripts npm que cuentan como sitio de ejecución: la puerta que corre una
+    // persona antes de cerrar, y que CI replica.
+    aggregates: ["verify"],
+    // Comandos que NO son puertas y se ejecutan a mano, con su razón. Declararlo
+    // exige escribir por qué, que es lo que separa una decisión de un olvido: un
+    // guardrail desconectado y uno deliberadamente manual se ven igual desde
+    // fuera, y sólo el segundo tiene explicación.
+    manual: {
+      worktree:
+        "mide la posición del árbol, no el cambio: es chequeo de arranque de sesión",
+    },
+  },
   refs: {
     // Dónde viven los documentos cuyas rutas citadas se comprueban.
     docs: ["docs", "specs"],

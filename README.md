@@ -11,6 +11,7 @@ npx guardrails refs          # ¿existen las rutas que la documentación cita?
 npx guardrails stack         # ¿el stack documentado existe de verdad?
 npx guardrails state         # ¿los documentos de estado cumplen lo que dicen?
 npx guardrails surface       # ¿el diff cuadra con lo que el commit declaró?
+npx guardrails wiring        # ¿los ejecuta alguien, a todos ellos?
 ```
 
 ---
@@ -134,6 +135,36 @@ que un archivo no debe existir queda sujeto a que realmente no exista.
 > Un proyecto sin documentos de estado declara `"estado": {}`. Los invariantes que dependen de
 > ellos se saltan y queda en pie el genérico, que no necesita ninguno.
 
+### `wiring`
+
+El guardrail de los guardrails. Comprueba, en los dos sentidos, que **ninguno está desconectado**
+y que nada invoca un comando que no existe.
+
+```bash
+npx guardrails wiring
+```
+
+> Un guardrail que no ejecuta nadie es **indistinguible de uno que pasa**. No avisa, no falla, no
+> aparece en ningún log — simplemente no está.
+
+Ha ocurrido dos veces con coste medido: un guardrail de clases de color vivió semanas sin que
+nada lo ejecutara, y otro de documentos de estado faltaba en su workflow durante seis meses —
+hueco en el que el documento que vigilaba se pudo borrar dos veces.
+
+Los descubre por glob y por `package.json`: **no lleva ninguna lista dentro**, así que uno nuevo
+queda vigilado sin que nadie lo añada. Y reconoce las **tres** formas de invocación que conviven,
+porque conocer sólo una miente en la dirección peligrosa —declarar muerto lo que está vivo—:
+
+| Forma | Dónde aparece |
+| --- | --- |
+| `npm run lint:refs` | Workflows, scripts agregados |
+| `node scripts/check-x.mjs` | Hooks que llaman por ruta directa |
+| `./node_modules/.bin/guardrails x` · `npx …#tag x` | Hooks rápidos y CI sin `npm ci` |
+
+Lo que **no** es una puerta se declara en `wiring.manual` con su razón. Escribir el porqué es lo
+que separa una decisión de un olvido: desde fuera, un guardrail desconectado y uno deliberadamente
+manual se ven igual.
+
 ### `surface`
 
 Comprueba que el número de archivos que el commit declaró en su trailer `Superficie:` cuadra
@@ -185,6 +216,10 @@ tres cosas y sólo declara esas tres.
 | `stack.workflows` | Carpeta de workflows cuya configuración ejecutable se compara con el dato canónico |
 | `stack.schema` | Esquema del que se lee el motor de base de datos. `null` si el proyecto no tiene |
 | `state.docs` · `state.index` | Carpeta de documentos y dónde el proyecto declara su modelo de estado |
+| `wiring.dirs` · `wiring.pattern` | Dónde viven los guardrails propios y cómo se llaman |
+| `wiring.surfaces` | Dónde puede estar cableado uno. Incluye `.husky/` y `lefthook.yml`: un proyecto usa una familia de hooks y otro la otra |
+| `wiring.aggregates` | Scripts npm que cuentan como sitio de ejecución (`verify`) |
+| `wiring.manual` | Comandos que no son puertas, con su razón obligatoria |
 | `state.estado` | Los documentos de estado y su papel: `siempre` (obligatorio), `abierto` (es el backlog). `{}` si no hay |
 
 **Sin archivo, se usan los defectos**, que son los valores con los que estos guardrails nacieron.

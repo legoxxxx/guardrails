@@ -54,6 +54,11 @@ const COMANDOS = {
     resumen: "Los documentos de estado cumplen lo que su propia prosa declara",
     opciones: ["configurable en guardrails.config.json → state.docs, state.index, state.estado"],
   },
+  wiring: {
+    modulo: "../src/wiring.mjs",
+    resumen: "Ningún guardrail está desconectado, y nada invoca lo que no existe",
+    opciones: ["configurable en guardrails.config.json → wiring.dirs, wiring.surfaces, wiring.aggregates"],
+  },
   surface: {
     modulo: "../src/surface.mjs",
     resumen: "El diff cuadra con la superficie que el commit declaró en su trailer",
