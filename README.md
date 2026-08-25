@@ -219,6 +219,8 @@ tres cosas y sólo declara esas tres.
 | `refs.docs` | Carpetas cuyos documentos se leen en busca de rutas citadas |
 | `refs.roots` | Prefijos que cuentan como ruta del repositorio. Lo demás entre comillas invertidas —nombres de función, comandos, clases CSS— se ignora |
 | `refs.historical` | Expresiones regulares de documentos que registran el pasado y por tanto pueden nombrar rutas que ya no existen |
+
+> Los defectos cubren informes fechados, **archivos** (`docs/audits/archive/`, `docs/prompts/_archived/`), changelogs y runbooks. El de archivo faltaba y dejaba 28 avisos permanentes en un proyecto — ruido que hace que nadie mire los tres que sí importaban.
 | `stack.ambito` | Documentos donde vive la tabla de stack que se contrasta con `package.json` |
 | `stack.workflows` | Carpeta de workflows cuya configuración ejecutable se compara con el dato canónico |
 | `stack.schema` | Esquema del que se lee el motor de base de datos. `null` si el proyecto no tiene |

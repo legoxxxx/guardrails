@@ -1,6 +1,6 @@
 {
   "name": "guardrails",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Comprobaciones portables de repositorio: posición del árbol, bytes NUL, rutas citadas, stack documentado y superficie del commit. Sin dependencias y sin nada específico de un proyecto.",
   "type": "module",
   "bin": {

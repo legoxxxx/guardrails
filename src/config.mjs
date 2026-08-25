@@ -106,6 +106,11 @@ const DEFECTOS = {
     historical: [
       "^docs/(CHANGELOG|MIGRATION_LOG|DONE|SYNC_MANIFEST)\\.md$",
       "^docs/audits/\\d{4}-\\d{2}-\\d{2}-",
+      // Un informe archivado es histórico por definición: audita código que
+      // desde entonces cambió, y nombrar rutas que ya no existen es su
+      // función. Faltaba, y dejaba 28 avisos permanentes en un proyecto —
+      // ruido que hace que nadie mire los tres que sí importaban.
+      "^docs/audits/archive/",
       "^docs/case-studies/",
       "^docs/prompts/_archived/",
       "^docs/guides/RUNBOOK-",
