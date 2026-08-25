@@ -166,6 +166,36 @@ for (const g of GUARDRAILS) {
   }
 }
 
+// ─── Las versiones fijadas no divergen entre sí ─────────────────────────────
+//
+// Cada `npx …guardrails#vX` de un workflow es una COPIA de la versión que
+// `package.json` declara. Copias sin original divergen sin que nadie decida: al
+// escribir esta comprobación, un workflow llevaba meses fijado en la primera
+// versión publicada mientras el resto del repositorio iba cuatro por delante.
+// Nadie lo notó porque el comando que invocaba no había cambiado — o sea, se
+// enteraría el día en que sí importara.
+//
+// Es la misma forma que `stack` aplica al motor de base de datos y a la versión
+// de Node: hay un dato canónico y hay copias, y las copias se comprueban.
+const declarada = /guardrails#(v[\d.]+)/.exec(pkg.devDependencies?.guardrails ?? "")?.[1];
+const pines = new Map();
+for (const { fuente, texto } of SUPERFICIE) {
+  for (const m of texto.matchAll(/guardrails#(v[\d.]+)/g)) {
+    if (!pines.has(m[1])) pines.set(m[1], []);
+    pines.get(m[1]).push(fuente);
+  }
+}
+const desfasadas = [...pines].filter(([v]) => declarada !== undefined && v !== declarada);
+if (desfasadas.length) {
+  console.log(`\n${YELLOW}Versiones fijadas que no cuadran con package.json${NC}\n`);
+  for (const [v, fuentes] of desfasadas) {
+    console.log(`  ${RED}✖${NC} ${v} en ${[...new Set(fuentes)].join(", ")}`);
+    errores.push(
+      `${[...new Set(fuentes)].join(", ")} fija ${v} y \`package.json\` declara ${declarada}`,
+    );
+  }
+}
+
 // ─── Sentido inverso: lo que se invoca existe ────────────────────────────────
 // Los dígitos cuentan: sin ellos `test:e2e` se parte en `test:e` y se reporta
 // como inexistente. Un guardrail que inventa hallazgos se desactiva igual de

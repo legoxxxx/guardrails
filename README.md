@@ -161,6 +161,13 @@ porque conocer sólo una miente en la dirección peligrosa —declarar muerto lo
 | `node scripts/check-x.mjs` | Hooks que llaman por ruta directa |
 | `./node_modules/.bin/guardrails x` · `npx …#tag x` | Hooks rápidos y CI sin `npm ci` |
 
+Comprueba además que **las versiones fijadas no divergen entre sí**. Cada `npx …guardrails#vX`
+de un workflow es una copia de lo que `package.json` declara, y las copias sin original divergen
+sin que nadie decida: al escribir esta comprobación, un workflow llevaba meses fijado en la
+primera versión publicada mientras el resto del repositorio iba cuatro por delante. Nadie lo
+notó porque el comando que invocaba no había cambiado — o sea, se habría enterado el día en que
+sí importara.
+
 Lo que **no** es una puerta se declara en `wiring.manual` con su razón. Escribir el porqué es lo
 que separa una decisión de un olvido: desde fuera, un guardrail desconectado y uno deliberadamente
 manual se ven igual.
