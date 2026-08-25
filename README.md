@@ -267,12 +267,35 @@ respuesta la pregunta de qué se está ejecutando exactamente.
 
 ---
 
+## Cómo se prueban
+
+```bash
+npm test
+```
+
+**46 pruebas, los siete comandos.** Cada una es de **mutación**: inyecta el defecto que el
+guardrail dice prevenir y comprueba que lo caza. Una suite que sólo probara el caso bueno pasaría
+en verde con el guardrail desactivado — que es exactamente el modo de fallo que este paquete
+persigue.
+
+Los comandos se prueban como lo que son: **un proceso que corre en un directorio desechable y
+sale con 0 o 1**. Nada de importar el módulo y espiar funciones, que probaría una versión del
+guardrail que nadie ejecuta.
+
+> Escribir estas suites encontró **tres defectos** que la mutación manual no había visto: `wiring`
+> se saltaba la comprobación inversa en un proyecto sin guardrails propios, `stack` tenía una rama
+> muerta que sacaba «sin servicio que comparar» donde había una decisión declarada, y un test
+> reveló que el mensaje de ese caso sonaba a fallo. Ninguno rompía nada; los tres habrían
+> sobrevivido indefinidamente.
+
 ## Cómo se añade un comando
 
 1. El módulo va en `src/`, se ejecuta al importarse y sale con `process.exit`. Lee sus propios
    argumentos de `process.argv.slice(2)`.
 2. Se registra en `COMANDOS` de [`bin/guardrails.mjs`](./bin/guardrails.mjs).
-3. **No puede contener el nombre de ningún proyecto, ni una ruta que sólo exista en uno.** Si
+3. **Lleva su suite en `test/`, con al menos una prueba de mutación.** Una puerta que no se ha
+   visto fallar no está probada.
+4. **No puede contener el nombre de ningún proyecto, ni una ruta que sólo exista en uno.** Si
    necesita saber dónde mirar, el dato entra por opción o por convención descubierta, nunca
    cableado.
 

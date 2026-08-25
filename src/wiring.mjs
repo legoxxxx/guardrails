@@ -144,16 +144,24 @@ console.log("══════════════════════�
 console.log("  🔌 Wiring — ningún guardrail está desconectado");
 console.log("════════════════════════════════════════════════════════════════\n");
 
+// ⚠️ NO se sale aquí aunque no haya guardrails propios.
+//
+// Antes sí, y era un agujero de la misma clase que el de las líneas comentadas:
+// un proyecto sin guardrails propios —como el que sólo usa los del paquete—
+// saltaba también la comprobación INVERSA, así que un workflow citando un script
+// inexistente pasaba en verde. Lo cazó su propia suite al escribirla.
+//
+// Sin guardrails no hay nada que conectar, pero sí hay algo que comprobar: que lo
+// que los hooks y CI invocan exista.
 if (GUARDRAILS.length === 0) {
-  console.log(`  ${DIM}Este proyecto no declara ningún guardrail. Nada que vigilar.${NC}`);
-  console.log("════════════════════════════════════════════════════════════════");
-  process.exit(0);
+  console.log(`  ${DIM}Este proyecto no declara guardrails propios.${NC}`);
+  console.log(`  ${DIM}Se comprueba igual que lo invocado exista.${NC}\n`);
 }
 
 const errores = [];
 let ok = 0;
 
-console.log(`${YELLOW}Cada guardrail y dónde se ejecuta${NC}\n`);
+if (GUARDRAILS.length) console.log(`${YELLOW}Cada guardrail y dónde se ejecuta${NC}\n`);
 for (const g of GUARDRAILS) {
   const sitios = SUPERFICIE.filter(({ texto }) => {
     const porRuta = g.clase === "archivo" && texto.includes(g.que);

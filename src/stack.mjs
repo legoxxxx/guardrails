@@ -710,11 +710,15 @@ console.log(`  ${DIM}Citas correctas:${NC} ${citasOk}\n`);
 console.log(`${YELLOW}Configuración ejecutable${NC}`);
 console.log(
   `  ${DIM}Motor canónico (${"schema.prisma"}):${NC} ` +
-    (PROVIDER
-      ? `${PROVIDER}${MOTOR_ESPERADO ? ` ${DIM}→ imagen \`${MOTOR_ESPERADO}\`${NC}` : ` ${DIM}(sin servicio que comparar)${NC}`}`
-      : PROVIDER === "n/a"
-        ? `${DIM}no aplica — sin base de datos${NC}`
-        : `${YELLOW}no se pudo leer${NC}`),
+      // El orden importa: `"n/a"` es una cadena TRUTHY, así que preguntarlo
+      // después de `PROVIDER` deja su rama muerta y saca «sin servicio que
+      // comparar» —que suena a fallo— donde hay una decisión declarada. Lo
+      // encontró la suite de este comando al escribirla.
+      (PROVIDER === "n/a"
+        ? `${DIM}no aplica — el proyecto declara que no tiene base de datos${NC}`
+        : PROVIDER
+          ? `${PROVIDER}${MOTOR_ESPERADO ? ` ${DIM}→ imagen ${MOTOR_ESPERADO}${NC}` : ` ${DIM}(sin servicio que comparar)${NC}`}`
+          : `${YELLOW}no se pudo leer${NC}`),
 );
 console.log(
   `  ${DIM}Node canónico (engines.node):${NC} ` +
