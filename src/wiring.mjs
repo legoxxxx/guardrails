@@ -87,6 +87,30 @@ function descubrir() {
   return hallados;
 }
 
+/**
+ * Una línea comentada NO invoca nada.
+ *
+ * Sin esto, comentar `# node scripts/check-x.mjs` en un hook dejaba el guardrail
+ * contando como CONECTADO: el texto seguía ahí y la búsqueda lo encontraba. Y
+ * comentar una línea es la forma más realista de desactivar una puerta — alguien
+ * la comenta para desatascarse y se olvida de descomentarla.
+ *
+ * Es decir: el modo de fallo más probable era justo el que este comando no veía,
+ * mientras informaba «12/12 conectados» en verde. Lo cazó una auditoría de
+ * mutación sobre el propio comando.
+ *
+ * Se quitan los comentarios de línea completa y la cola tras ` #`. El espacio
+ * antes de la almohadilla no es un detalle: sin él, `guardrails#v1.6.2` perdería
+ * su versión y el check de versiones fijadas dejaría de ver nada.
+ */
+function sinComentarios(texto) {
+  return texto
+    .split("\n")
+    .filter((l) => !/^\s*#/.test(l))
+    .map((l) => l.replace(/\s#.*$/, ""))
+    .join("\n");
+}
+
 /** Todo texto donde un guardrail puede estar invocado. */
 function superficies() {
   const fuentes = [];
@@ -97,13 +121,13 @@ function superficies() {
       for (const e of readdirSync(ruta)) {
         const f = join(ruta, e);
         try {
-          if (statSync(f).isFile()) fuentes.push({ fuente: f, texto: readFileSync(f, "utf8") });
+          if (statSync(f).isFile()) fuentes.push({ fuente: f, texto: sinComentarios(readFileSync(f, "utf8")) });
         } catch {
           /* enlace roto o permiso: no es una superficie */
         }
       }
     } else {
-      fuentes.push({ fuente: ruta, texto: readFileSync(ruta, "utf8") });
+      fuentes.push({ fuente: ruta, texto: sinComentarios(readFileSync(ruta, "utf8")) });
     }
   }
   // Los agregados cuentan: son la puerta que corre una persona antes de cerrar.
