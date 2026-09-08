@@ -33,7 +33,12 @@ describe("nul", () => {
     escribir(dir, "docs/a.md", Buffer.from(`# Título\n\nantes${NUL}después\n`, "utf8"));
     const r = correr("nul", dir);
     expect(r.code, "un archivo con NUL debe romper la puerta").toBe(1);
-    expect(r.out + r.err).toMatch(/docs\/a\.md/);
+    // El separador lo pone el sistema operativo, y fijar la barra hacia delante
+    // dejaba esta prueba en rojo permanente en Windows por el formato de la
+    // ruta, no por lo que mide el guardrail. Se normaliza antes de comparar.
+    const BARRA_INVERSA = String.fromCharCode(92);
+    const salida = (r.out + r.err).split(BARRA_INVERSA).join("/");
+    expect(salida).toContain("docs/a.md");
   });
 
   it("no confunde texto acentuado con bytes binarios", () => {

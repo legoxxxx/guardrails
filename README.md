@@ -70,6 +70,12 @@ npx guardrails nul
 > binario y suprime la salida, así que daba **verde sobre un archivo con NUL dentro**. Y el
 > comportamiento depende de la implementación, o sea de la máquina.
 
+> 🪟 **Su módulo se llama `src/nul-bytes.mjs` y no `src/nul.mjs`.** `NUL` es un nombre de
+> dispositivo reservado en Windows, y `core.protectNTFS` —activo por defecto allí— rechaza el
+> checkout con `invalid path`. Con el nombre antiguo, **este paquete no se podía instalar desde
+> git en Windows**: `npm install` moría al clonar y el fallo llegaba disfrazado de «destination
+> path already exists». El comando sigue siendo `nul`; lo que cambió es el archivo.
+
 ### `refs`
 
 Descubre por expresión regular las rutas que la documentación cita y comprueba que existen.

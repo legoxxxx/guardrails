@@ -50,8 +50,13 @@ export function paquete(dir: string, extra: Record<string, unknown> = {}): void 
  * «falló, luego cazó el defecto» daría por buena una puerta rota.
  */
 export function correr(comando: string, dir: string, args: string[] = []): Salida {
-  const script = resolve(process.cwd(), `src/${comando}.mjs`);
-  const r = spawnSync("node", [script, ...args], {
+  // Se ejecuta el DESPACHADOR, no `src/<comando>.mjs` directamente: es la vía
+  // por la que se le invoca de verdad, y la única que comprueba que el mapa de
+  // comandos apunta a un módulo que existe. Con la ruta cableada, renombrar un
+  // archivo de `src/` dejaba los tests en verde y el binario roto — pasó al
+  // renombrar `nul.mjs`, que en Windows es un nombre de dispositivo reservado.
+  const bin = resolve(process.cwd(), "bin/guardrails.mjs");
+  const r = spawnSync("node", [bin, comando, ...args], {
     cwd: dir,
     encoding: "utf8",
     env: { ...process.env, GITHUB_ACTIONS: "", NO_COLOR: "1" },

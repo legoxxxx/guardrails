@@ -35,7 +35,7 @@ const COMANDOS = {
     opciones: ["--fetch            refresca antes de medir", "--max-dirty=<n>    umbral de archivos sin commitear (por defecto 30)"],
   },
   nul: {
-    modulo: "../src/nul.mjs",
+    modulo: "../src/nul-bytes.mjs",
     resumen: "Que un archivo de texto siga siendo texto: caza bytes NUL",
     opciones: ["configurable en guardrails.config.json → nul.scan"],
   },
