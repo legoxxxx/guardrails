@@ -75,6 +75,10 @@ npx guardrails nul
 > checkout con `invalid path`. Con el nombre antiguo, **este paquete no se podía instalar desde
 > git en Windows**: `npm install` moría al clonar y el fallo llegaba disfrazado de «destination
 > path already exists». El comando sigue siendo `nul`; lo que cambió es el archivo.
+>
+> La regla mira el nombre **anterior al primer punto**, así que su suite tuvo que renombrarse
+> igual: `nul.test.ts` era tan ilegal como `nul.mjs`, y quedó fuera del primer arreglo — el
+> paquete siguió sin instalarse hasta que se renombraron los dos.
 
 ### `refs`
 
