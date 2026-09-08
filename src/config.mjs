@@ -46,6 +46,30 @@ const DEFECTOS = {
     // Esquema del que se lee el `provider`. Si no existe, ese check se salta
     // solo: un proyecto sin base de datos no tiene motor que contrastar.
     schema: "prisma/schema.prisma",
+    // Nombres más largos que CONTIENEN el de un paquete retirado y NO son ese
+    // paquete.
+    //
+    // El caso que lo hizo necesario: `shadcn` es el CLI de scaffolding, que se
+    // ejecuta con `npx` y no se instala; `shadcn/ui` es un sistema de
+    // componentes cuyo código se COPIA al repositorio y que nunca fue una
+    // dependencia. Al desinstalar el CLI, diez citas correctas a `shadcn/ui`
+    // —una de ellas dentro de la URL `ui.shadcn.com`— pasaron a bloquear. No
+    // era documentación desactualizada: era una subcadena.
+    //
+    // Por qué NO se arregla dejando de casar `X` dentro de `X/Y`: eso valdría
+    // para éste y crearía falsos NEGATIVOS en el caso opuesto, cuando un
+    // documento cita el subcamino de un paquete de verdad retirado
+    // (`lodash/debounce`). Y este guardrail prefiere hablar de más a callarse:
+    // uno que calla cuando debería hablar es peor que no tenerlo.
+    //
+    // Declarar uno EXIGE escribir el motivo, igual que `wiring.manual`: es lo
+    // que separa una decisión de un olvido, y lo que impide que esta clave
+    // acabe siendo el sitio donde se esconde lo que molesta.
+    //
+    //   "homonimos": {
+    //     "shadcn": { "formas": ["shadcn/ui"], "motivo": "…" }
+    //   }
+    homonimos: {},
   },
   state: {
     docs: "docs",

@@ -113,6 +113,32 @@ frente a la auditoría que sí eliminó otras.
 > Es distinto de que la ruta no exista, que sigue avisando: lo segundo puede ser un esquema
 > movido de sitio.
 
+> **Homónimos.** `stack` busca el nombre de un paquete retirado como subcadena, a propósito: un
+> documento no escribe `@tanstack/react-query`, escribe «TanStack Query». Eso tiene un reverso —
+> al desinstalar el CLI `shadcn`, diez citas correctas a **shadcn/ui** pasaron a bloquear en un
+> proyecto real, una de ellas dentro de la URL `ui.shadcn.com`. Son cosas distintas: el CLI se
+> ejecuta con `npx` y no se instala; el sistema de componentes se **copia** al repositorio y
+> nunca fue una dependencia.
+>
+> ```json
+> {
+>   "stack": {
+>     "homonimos": {
+>       "shadcn": {
+>         "formas": ["shadcn/ui", "ui.shadcn.com"],
+>         "motivo": "El paquete npm es el CLI de scaffolding, que se ejecuta con npx. shadcn/ui es el sistema de componentes: su código se copia a src/components/ui/ y nunca fue una dependencia."
+>       }
+>     }
+>   }
+> }
+> ```
+>
+> Tapa **sólo** las formas declaradas: `shadcn` a secas sigue bloqueando, y hay un test que lo
+> fija. No se arregló dejando de casar `X` dentro de `X/Y` porque eso crearía falsos negativos en
+> el caso opuesto —`lodash/debounce` de un paquete de verdad retirado—, y este guardrail prefiere
+> hablar de más a callarse. El `motivo` es obligatorio, como en `wiring.manual`: es lo que separa
+> una decisión de un olvido, y sale impreso en cada corrida que lo use.
+
 ### `state`
 
 Comprueba que los documentos de estado cumplen lo que su **propia prosa** declara. Cuatro
@@ -224,6 +250,7 @@ tres cosas y sólo declara esas tres.
 | `stack.ambito` | Documentos donde vive la tabla de stack que se contrasta con `package.json` |
 | `stack.workflows` | Carpeta de workflows cuya configuración ejecutable se compara con el dato canónico |
 | `stack.schema` | Esquema del que se lee el motor de base de datos. `null` si el proyecto no tiene |
+| `stack.homonimos` | Nombres más largos que contienen el de un paquete retirado y **no son** ese paquete, con su motivo obligatorio |
 | `state.docs` · `state.index` | Carpeta de documentos y dónde el proyecto declara su modelo de estado |
 | `wiring.dirs` · `wiring.pattern` | Dónde viven los guardrails propios y cómo se llaman |
 | `wiring.surfaces` | Dónde puede estar cableado uno. Incluye `.husky/` y `lefthook.yml`: un proyecto usa una familia de hooks y otro la otra |

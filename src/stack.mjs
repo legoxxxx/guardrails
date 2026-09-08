@@ -140,6 +140,35 @@ const AMBITO = CFG.ambito;
 const WORKFLOWS = CFG.workflows;
 
 /**
+ * Homónimos: nombres más largos que contienen el de un paquete retirado y que
+ * no son ese paquete — `shadcn/ui` frente a `shadcn`.
+ *
+ * Se valida al arrancar y no al usarse. Una declaración a medias es un error de
+ * quien escribió la configuración, y el momento de decírselo es antes de correr
+ * nada: un `motivo` vacío convertiría esta clave en un silenciador anónimo, que
+ * es justo lo que no puede ser.
+ */
+const HOMONIMOS = CFG.homonimos ?? {};
+for (const [paq, decl] of Object.entries(HOMONIMOS)) {
+  const declFormas = decl?.formas;
+  const motivo = typeof decl?.motivo === "string" ? decl.motivo.trim() : "";
+  const formasOk =
+    Array.isArray(declFormas) &&
+    declFormas.length > 0 &&
+    declFormas.every((f) => typeof f === "string" && f.trim());
+  if (!formasOk) {
+    console.error(`\x1b[0;31m✖ stack.homonimos["${paq}"].formas: lista de textos no vacíos\x1b[0m`);
+    process.exit(1);
+  }
+  if (!motivo) {
+    console.error(`\x1b[0;31m✖ stack.homonimos["${paq}"] no declara «motivo»\x1b[0m`);
+    console.error(`\x1b[2m  Declarar un homónimo exige escribir por qué ese nombre no es el paquete.\x1b[0m`);
+    console.error(`\x1b[2m  Sin esa frase, la exención es indistinguible de un olvido.\x1b[0m`);
+    process.exit(1);
+  }
+}
+
+/**
  * Familia de imagen Docker que corresponde a cada `provider` de Prisma.
  *
  * Este mapa SÍ es una lista escrita a mano, y va contra la regla del ecosistema
@@ -313,6 +342,31 @@ const aplanar = (s) => s.replace(/\n\s*>?\s*/g, " ").replace(/\s+/g, " ");
  * con el propio nombre npm, sin casar con «TanStack Table», que es otro paquete
  * y sí está instalado.
  */
+/** Relleno sin letras: nada casa dentro, y la frontera de palabra lo ignora. */
+const RELLENO = String.fromCharCode(1);
+
+/**
+ * Tapa las formas homónimas declaradas ANTES de buscar paquetes retirados.
+ *
+ * Sustituye por un relleno de la MISMA longitud en vez de borrar: los números de
+ * línea salen de desplazamientos sobre el cuerpo, y acortar el texto los movería
+ * todos. Devuelve también cuántas tapó, porque una exención que no se ve en la
+ * salida es una exención que nadie revisa.
+ */
+function enmascararHomonimos(body) {
+  let out = body;
+  const tapadas = new Map();
+  for (const [paq, decl] of Object.entries(HOMONIMOS)) {
+    for (const forma of decl.formas) {
+      out = out.replace(new RegExp(esc(forma), "gi"), (m) => {
+        tapadas.set(paq, (tapadas.get(paq) ?? 0) + 1);
+        return RELLENO.repeat(m.length);
+      });
+    }
+  }
+  return { out, tapadas };
+}
+
 function formaDe(nombre) {
   const tokens = nombre.replace(/^@/, "").split(/[/-]/).filter(Boolean);
   if (tokens.length === 1) return new RegExp(`\\b${esc(tokens[0])}\\b`, "gi");
@@ -455,6 +509,7 @@ const formas = new Map(RETIRADOS.map((n) => [n, formaDe(n)]));
 const archivos = AMBITO.flatMap(walk);
 const bloqueantes = [];
 const avisos = [];
+const exentas = new Map();
 let citasOk = 0;
 
 for (const file of archivos) {
@@ -463,10 +518,15 @@ for (const file of archivos) {
   const bls = bloques(body);
   const lineas = body.split("\n");
 
+  // El cuerpo con los homonimos tapados. Misma longitud que el original, asi
+  // que los desplazamientos del match siguen sirviendo para su linea y bloque.
+  const { out: cuerpoRetirados, tapadas } = enmascararHomonimos(body);
+  for (const [paq, n] of tapadas) exentas.set(paq, (exentas.get(paq) ?? 0) + n);
+
   // Check 1 — retirados citados como vigentes
   for (const [nombre, re] of formas) {
     re.lastIndex = 0;
-    for (const m of body.matchAll(re)) {
+    for (const m of cuerpoRetirados.matchAll(re)) {
       const nLinea = body.slice(0, m.index).split("\n").length - 1;
       const linea = lineas[nLinea] ?? "";
       const bloque = bls.find((b) => nLinea >= b.desde && nLinea < b.hasta);
@@ -705,6 +765,13 @@ if (superficial) {
   );
 }
 console.log(`  ${DIM}Documentos analizados:${NC} ${archivos.length}`);
+if (exentas.size) {
+  const total = [...exentas.values()].reduce((a, b) => a + b, 0);
+  console.log(`  ${DIM}Citas exentas por homónimo declarado:${NC} ${total}`);
+  for (const [paq, n] of [...exentas].sort()) {
+    console.log(`    ${DIM}${paq} × ${n} — ${HOMONIMOS[paq].motivo}${NC}`);
+  }
+}
 console.log(`  ${DIM}Citas correctas:${NC} ${citasOk}\n`);
 
 console.log(`${YELLOW}Configuración ejecutable${NC}`);
