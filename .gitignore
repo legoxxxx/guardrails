@@ -1,2 +1,8 @@
 node_modules/
 *.tgz
+
+# Claude Code: ajustes locales por maquina. Registra los permisos concedidos ad hoc
+# durante las sesiones. Versionarlo provoca conflictos entre maquinas sin aportar nada.
+# Los permisos que SI deba compartir el equipo van en `.claude/settings.json`
+# (sin `.local`), que no esta ignorado.
+.claude/settings.local.json
